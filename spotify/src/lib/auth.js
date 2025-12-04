@@ -66,6 +66,26 @@ export function isAuthenticated() {
   return getAccessToken() !== null;
 }
 
+export async function ensureAccessToken() {
+  const token = getAccessToken();
+  if (token) return token;
+  const refreshToken = localStorage.getItem('spotify_refresh_token');
+  if (!refreshToken) return null;
+  const response = await fetch('/api/refresh-token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refresh_token: refreshToken })
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    return null;
+  }
+  const expirationTime = Date.now() + data.expires_in * 1000;
+  localStorage.setItem('spotify_token', data.access_token);
+  localStorage.setItem('spotify_token_expiration', expirationTime.toString());
+  return data.access_token;
+}
+
 // Cerrar sesión
 export function logout() {
   localStorage.removeItem('spotify_token');

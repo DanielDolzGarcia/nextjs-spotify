@@ -32,7 +32,7 @@ export default function CallbackPage() {
     const savedState = localStorage.getItem('spotify_auth_state');
     if (!state || state !== savedState) {
       setError('Error de validación de seguridad (CSRF). Intenta iniciar sesión de nuevo.');
-      localStorageStorage.removeItem('spotify_auth_state');
+      localStorage.removeItem('spotify_auth_state');
       return;
     }
 
