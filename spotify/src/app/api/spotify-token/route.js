@@ -13,7 +13,7 @@ export async function POST(request) {
 
     const clientId = process.env.SPOTIFY_CLIENT_ID;
     const clientSecret = process.env.SPOTIFY_CLIENT_SECRET;
-    const redirectUri = process.env.NEXT_PUBLIC_REDIRECT_URI;
+    const redirectUri = process.env.NEXT_PUBLIC_REDIRECT_URI || 'http://localhost:3000/auth/callback';
 
     // Intercambiar código por tokens
     const response = await fetch('https://accounts.spotify.com/api/token', {
