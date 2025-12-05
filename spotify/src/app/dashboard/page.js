@@ -60,27 +60,36 @@ export default function DashboardPage() {
   })
 
   const generate = async () => {
+    if (loading) return
     setLoading(true)
-    await ensureAccessToken()
-    const prefs = buildPreferences()
-    const tracks = await generatePlaylist(prefs)
-    setPlaylist(tracks || [])
-    setLoading(false)
+    try {
+      await ensureAccessToken()
+      const prefs = buildPreferences()
+      const tracks = await generatePlaylist(prefs)
+      setPlaylist(tracks || [])
+    } finally {
+      setLoading(false)
+    }
   }
 
   const refresh = async () => {
+    if (loading) return
     await generate()
   }
 
   const addMore = async () => {
+    if (loading) return
     setLoading(true)
-    await ensureAccessToken()
-    const prefs = buildPreferences()
-    const tracks = await generatePlaylist(prefs)
-    const existingIds = new Set(playlist.map((t) => t.id))
-    const newOnes = (tracks || []).filter((t) => !existingIds.has(t.id))
-    setPlaylist((pl) => [...pl, ...newOnes])
-    setLoading(false)
+    try {
+      await ensureAccessToken()
+      const prefs = buildPreferences()
+      const tracks = await generatePlaylist(prefs)
+      const existingIds = new Set(playlist.map((t) => t.id))
+      const newOnes = (tracks || []).filter((t) => !existingIds.has(t.id))
+      setPlaylist((pl) => [...pl, ...newOnes])
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -102,20 +111,23 @@ export default function DashboardPage() {
           <DecadeWidget selectedItems={decades} onSelect={setDecades} />
           <button
             onClick={generate}
-            className="w-full bg-green-500 hover:bg-green-600 text-black font-semibold px-4 py-2 rounded"
+            disabled={loading}
+            className="w-full bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-black font-semibold px-4 py-2 rounded"
           >
             Generar playlist
           </button>
           <div className="flex gap-2">
             <button
               onClick={refresh}
-              className="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded"
+              disabled={loading}
+              className="flex-1 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded"
             >
               Refrescar
             </button>
             <button
               onClick={addMore}
-              className="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded"
+              disabled={loading}
+              className="flex-1 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded"
             >
               Añadir más
             </button>

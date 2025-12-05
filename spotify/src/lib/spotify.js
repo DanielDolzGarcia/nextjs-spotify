@@ -17,14 +17,16 @@ export async function generatePlaylist(preferences) {
     allTracks.push(...data.tracks);
   }
 
-  // 2. Buscar por géneros
-  for (const genre of genres) {
+  // 2. Buscar por géneros (eliminar duplicados)
+  const uniqueGenres = Array.from(new Set(genres));
+  for (const genre of uniqueGenres) {
     const results = await fetch(
       `https://api.spotify.com/v1/search?type=track&q=genre:${genre}&limit=20`,
       {
         headers: { 'Authorization': `Bearer ${token}` }
       }
     );
+    if (!results.ok) continue;
     const data = await results.json();
     allTracks.push(...data.tracks.items);
   }

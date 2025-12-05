@@ -3,7 +3,10 @@
 import Image from 'next/image'
 
 export default function TrackCard({ track, isFavorite, onToggleFavorite, onRemove }) {
-  const image = track?.album?.images?.[0]?.url || ''
+  const rawImage = track?.album?.images?.[0]?.url || ''
+  const image = rawImage?.startsWith('https://iscdn.co/')
+    ? rawImage.replace('https://iscdn.co/', 'https://i.scdn.co/')
+    : rawImage
   const title = track?.name || ''
   const artist = track?.artists?.map(a => a.name).join(', ') || ''
   const durationMs = track?.duration_ms || 0
