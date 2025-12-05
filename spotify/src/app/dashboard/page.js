@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation'
 import { isAuthenticated, logout, ensureAccessToken } from '@/lib/auth'
 import { generatePlaylist } from '@/lib/spotify'
 import GenreWidget from '@/components/widgets/GenreWidget'
+import PopularityWidget from '@/components/widgets/PopularityWidget'
+import DecadeWidget from '@/components/widgets/DecadeWidget'
 import TrackCard from '@/components/TrackCard'
 
 export default function DashboardPage() {
@@ -16,6 +18,8 @@ export default function DashboardPage() {
     if (typeof window === 'undefined') return []
     return JSON.parse(localStorage.getItem('favorite_tracks') || '[]')
   })
+  const [popularity, setPopularity] = useState([30, 100])
+  const [decades, setDecades] = useState([])
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -49,8 +53,8 @@ export default function DashboardPage() {
   const buildPreferences = () => ({
     artists: [],
     genres,
-    decades: [],
-    popularity: [30, 100]
+    decades,
+    popularity
   })
 
   const generate = async () => {
@@ -91,6 +95,8 @@ export default function DashboardPage() {
       <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="space-y-4">
           <GenreWidget selectedItems={genres} onSelect={setGenres} />
+          <PopularityWidget selectedItems={popularity} onSelect={setPopularity} />
+          <DecadeWidget selectedItems={decades} onSelect={setDecades} />
           <button
             onClick={generate}
             className="w-full bg-green-500 hover:bg-green-600 text-black font-semibold px-4 py-2 rounded"
