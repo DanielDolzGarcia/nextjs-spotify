@@ -7,6 +7,7 @@ import { generatePlaylist } from '@/lib/spotify'
 import GenreWidget from '@/components/widgets/GenreWidget'
 import PopularityWidget from '@/components/widgets/PopularityWidget'
 import DecadeWidget from '@/components/widgets/DecadeWidget'
+import ArtistWidget from '@/components/widgets/ArtistWidget'
 import TrackCard from '@/components/TrackCard'
 
 export default function DashboardPage() {
@@ -20,6 +21,7 @@ export default function DashboardPage() {
   })
   const [popularity, setPopularity] = useState([30, 100])
   const [decades, setDecades] = useState([])
+  const [artists, setArtists] = useState([])
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -51,7 +53,7 @@ export default function DashboardPage() {
   }
 
   const buildPreferences = () => ({
-    artists: [],
+    artists,
     genres,
     decades,
     popularity
@@ -95,6 +97,7 @@ export default function DashboardPage() {
       <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="space-y-4">
           <GenreWidget selectedItems={genres} onSelect={setGenres} />
+          <ArtistWidget selectedItems={artists} onSelect={setArtists} />
           <PopularityWidget selectedItems={popularity} onSelect={setPopularity} />
           <DecadeWidget selectedItems={decades} onSelect={setDecades} />
           <button
