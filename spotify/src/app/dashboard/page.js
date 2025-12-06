@@ -17,6 +17,9 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [notFound, setNotFound] = useState(false)
+  const [showGenres, setShowGenres] = useState(false)
+  const [showPopularity, setShowPopularity] = useState(false)
+  const [showDecades, setShowDecades] = useState(false)
   const [favorites, setFavorites] = useState(() => {
     if (typeof window === 'undefined') return []
     return JSON.parse(localStorage.getItem('favorite_tracks') || '[]')
@@ -121,54 +124,113 @@ export default function DashboardPage() {
           Cerrar sesión
         </button>
       </div>
-      <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="space-y-4">
-          {error && (
-            <div className="bg-red-600/20 text-red-400 border border-red-600/40 px-3 py-2 rounded">
-              {error}
+      <div className="flex flex-col items-center gap-8 p-6 max-w-5xl mx-auto">
+        {/* Panel de Configuración */}
+        <div className="w-full max-w-3xl space-y-6">
+          <div className="flex justify-center">
+            <div className="w-full">
+              <ArtistWidget selectedItems={artists} onSelect={setArtists} />
             </div>
-          )}
-          <GenreWidget selectedItems={genres} onSelect={setGenres} />
-          <ArtistWidget selectedItems={artists} onSelect={setArtists} />
-          <PopularityWidget selectedItems={popularity} onSelect={setPopularity} />
-          <DecadeWidget selectedItems={decades} onSelect={setDecades} />
-          <button
-            onClick={generate}
-            disabled={loading}
-            className="w-full bg-green-500 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-black font-semibold px-4 py-2 rounded"
-          >
-            Generar playlist
-          </button>
-          <div className="flex gap-2">
-            <button
-              onClick={refresh}
-              disabled={loading}
-              className="flex-1 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded"
-            >
-              Refrescar
-            </button>
-            <button
-              onClick={addMore}
-              disabled={loading}
-              className="flex-1 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-4 py-2 rounded"
-            >
-              Añadir más
-            </button>
+          </div>
+
+          <div className="space-y-4">
+            {error && (
+              <div className="bg-red-600/20 text-red-400 border border-red-600/40 px-3 py-2 rounded text-center">
+                {error}
+              </div>
+            )}
+            
+            <div className="flex flex-wrap justify-center gap-2">
+              <button
+                onClick={() => setShowGenres((v) => !v)}
+                className={`px-4 py-2 rounded-full transition-colors ${
+                  showGenres ? 'bg-green-600 text-white' : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700'
+                }`}
+              >
+                Géneros
+              </button>
+              <button
+                onClick={() => setShowPopularity((v) => !v)}
+                className={`px-4 py-2 rounded-full transition-colors ${
+                  showPopularity ? 'bg-green-600 text-white' : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700'
+                }`}
+              >
+                Popularidad
+              </button>
+              <button
+                onClick={() => setShowDecades((v) => !v)}
+                className={`px-4 py-2 rounded-full transition-colors ${
+                  showDecades ? 'bg-green-600 text-white' : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700'
+                }`}
+              >
+                Décadas
+              </button>
+            </div>
+
+            <div className="space-y-4 transition-all duration-300 ease-in-out">
+              {showGenres && (
+                <div className="animate-in fade-in slide-in-from-top-2 duration-300 bg-gray-800/50 p-4 rounded-lg border border-gray-700">
+                  <GenreWidget selectedItems={genres} onSelect={setGenres} />
+                </div>
+              )}
+              {showPopularity && (
+                <div className="animate-in fade-in slide-in-from-top-2 duration-300 bg-gray-800/50 p-4 rounded-lg border border-gray-700">
+                  <PopularityWidget selectedItems={popularity} onSelect={setPopularity} />
+                </div>
+              )}
+              {showDecades && (
+                <div className="animate-in fade-in slide-in-from-top-2 duration-300 bg-gray-800/50 p-4 rounded-lg border border-gray-700">
+                  <DecadeWidget selectedItems={decades} onSelect={setDecades} />
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
+              <button
+                onClick={generate}
+                disabled={loading}
+                className="flex-1 bg-green-500 hover:bg-green-400 disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold text-lg px-6 py-3 rounded-full shadow-lg hover:shadow-green-500/20 transition-all"
+              >
+                Generar Playlist
+              </button>
+              <div className="flex gap-2 sm:w-auto w-full">
+                <button
+                  onClick={refresh}
+                  disabled={loading}
+                  className="flex-1 sm:flex-none bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-full transition-colors"
+                >
+                  Refrescar
+                </button>
+                <button
+                  onClick={addMore}
+                  disabled={loading}
+                  className="flex-1 sm:flex-none bg-gray-700 hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 rounded-full transition-colors"
+                >
+                  Añadir más
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-        <div className="md:col-span-2">
-          <h2 className="text-xl font-semibold mb-4">Playlist generada</h2>
+
+        {/* Resultados */}
+        <div className="w-full">
+          <h2 className="text-2xl font-bold mb-6 text-center text-gray-200">Tu Playlist</h2>
           {loading ? (
-            <div className="flex items-center justify-center h-40">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
+            <div className="flex items-center justify-center h-60">
+              <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-green-500"></div>
             </div>
           ) : notFound ? (
-            <div className="flex flex-col items-center justify-center h-40 text-center">
-              <div className="text-4xl font-bold text-red-500">404</div>
-              <div className="text-gray-400">No se encontraron resultados con los filtros seleccionados.</div>
+            <div className="flex flex-col items-center justify-center h-60 text-center bg-gray-800/30 rounded-xl border border-gray-800 p-8">
+              <div className="text-5xl font-bold text-gray-700 mb-4">404</div>
+              <div className="text-gray-400 text-lg">No encontramos canciones con esos filtros. ¡Prueba otra combinación!</div>
+            </div>
+          ) : playlist.length === 0 ? (
+            <div className="text-center text-gray-500 py-20 bg-gray-800/30 rounded-xl border border-gray-800">
+              <p className="text-lg">Configura tus filtros arriba y genera tu primera playlist</p>
             </div>
           ) : (
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {playlist.map((track) => (
                 <TrackCard
                   key={track.id}
