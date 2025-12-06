@@ -3,32 +3,42 @@ import { getAccessToken } from '@/lib/auth';
 export async function generatePlaylist(preferences) {
   const { artists, genres, decades, popularity } = preferences;
   const token = getAccessToken();
+  if (!token) return [];
   let allTracks = [];
 
   // 1. Obtener top tracks de artistas seleccionados
   for (const artist of artists) {
-    const tracks = await fetch(
-      `https://api.spotify.com/v1/artists/${artist.id}/top-tracks?market=US`,
-      {
-        headers: { 'Authorization': `Bearer ${token}` }
+    try {
+      const tracks = await fetch(
+        `https://api.spotify.com/v1/artists/${artist.id}/top-tracks?market=US`,
+        {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }
+      );
+      if (!tracks.ok) continue;
+      const data = await tracks.json();
+      if (Array.isArray(data?.tracks)) {
+        allTracks.push(...data.tracks);
       }
-    );
-    const data = await tracks.json();
-    allTracks.push(...data.tracks);
+    } catch (_) {}
   }
 
   // 2. Buscar por géneros (eliminar duplicados)
   const uniqueGenres = Array.from(new Set(genres));
   for (const genre of uniqueGenres) {
-    const results = await fetch(
-      `https://api.spotify.com/v1/search?type=track&q=genre:${genre}&limit=20`,
-      {
-        headers: { 'Authorization': `Bearer ${token}` }
+    try {
+      const results = await fetch(
+        `https://api.spotify.com/v1/search?type=track&q=genre:${genre}&limit=20`,
+        {
+          headers: { 'Authorization': `Bearer ${token}` }
+        }
+      );
+      if (!results.ok) continue;
+      const data = await results.json();
+      if (Array.isArray(data?.tracks?.items)) {
+        allTracks.push(...data.tracks.items);
       }
-    );
-    if (!results.ok) continue;
-    const data = await results.json();
-    allTracks.push(...data.tracks.items);
+    } catch (_) {}
   }
 
   // 3. Filtrar por década

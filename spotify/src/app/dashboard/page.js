@@ -15,6 +15,8 @@ export default function DashboardPage() {
   const [genres, setGenres] = useState([])
   const [playlist, setPlaylist] = useState([])
   const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [notFound, setNotFound] = useState(false)
   const [favorites, setFavorites] = useState(() => {
     if (typeof window === 'undefined') return []
     return JSON.parse(localStorage.getItem('favorite_tracks') || '[]')
@@ -63,10 +65,17 @@ export default function DashboardPage() {
     if (loading) return
     setLoading(true)
     try {
-      await ensureAccessToken()
+      setError('')
+      const token = await ensureAccessToken()
+      if (!token) {
+        setError('No hay token de acceso. Inicia sesión nuevamente.')
+        return
+      }
       const prefs = buildPreferences()
       const tracks = await generatePlaylist(prefs)
-      setPlaylist(tracks || [])
+      const list = tracks || []
+      setPlaylist(list)
+      setNotFound(list.length === 0)
     } finally {
       setLoading(false)
     }
@@ -81,12 +90,21 @@ export default function DashboardPage() {
     if (loading) return
     setLoading(true)
     try {
-      await ensureAccessToken()
+      setError('')
+      const token = await ensureAccessToken()
+      if (!token) {
+        setError('No hay token de acceso. Inicia sesión nuevamente.')
+        return
+      }
       const prefs = buildPreferences()
       const tracks = await generatePlaylist(prefs)
       const existingIds = new Set(playlist.map((t) => t.id))
       const newOnes = (tracks || []).filter((t) => !existingIds.has(t.id))
-      setPlaylist((pl) => [...pl, ...newOnes])
+      setPlaylist((pl) => {
+        const updated = [...pl, ...newOnes]
+        setNotFound(updated.length === 0)
+        return updated
+      })
     } finally {
       setLoading(false)
     }
@@ -105,6 +123,11 @@ export default function DashboardPage() {
       </div>
       <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="space-y-4">
+          {error && (
+            <div className="bg-red-600/20 text-red-400 border border-red-600/40 px-3 py-2 rounded">
+              {error}
+            </div>
+          )}
           <GenreWidget selectedItems={genres} onSelect={setGenres} />
           <ArtistWidget selectedItems={artists} onSelect={setArtists} />
           <PopularityWidget selectedItems={popularity} onSelect={setPopularity} />
@@ -139,8 +162,11 @@ export default function DashboardPage() {
             <div className="flex items-center justify-center h-40">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500"></div>
             </div>
-          ) : playlist.length === 0 ? (
-            <div className="text-gray-400">No hay canciones. Usa los widgets y genera la playlist.</div>
+          ) : notFound ? (
+            <div className="flex flex-col items-center justify-center h-40 text-center">
+              <div className="text-4xl font-bold text-red-500">404</div>
+              <div className="text-gray-400">No se encontraron resultados con los filtros seleccionados.</div>
+            </div>
           ) : (
             <div className="space-y-3">
               {playlist.map((track) => (
