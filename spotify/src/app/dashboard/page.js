@@ -224,10 +224,12 @@ export default function DashboardPage() {
         <div className="w-full">
           <h2 className="text-2xl font-bold mb-6 text-center text-gray-200">Tu Playlist</h2>
           
-          {/* Añadir canciones directamente */}
-          <div className="mb-6 max-w-2xl mx-auto">
-            <TrackWidget onAdd={handleAddTrack} />
-          </div>
+          {/* Añadir canciones directamente (solo visible si hay playlist) */}
+          {playlist.length > 0 && (
+            <div className="mb-6 max-w-2xl mx-auto">
+              <TrackWidget onAdd={handleAddTrack} />
+            </div>
+          )}
 
           {loading ? (
             <div className="flex items-center justify-center h-60">
