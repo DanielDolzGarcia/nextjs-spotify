@@ -8,6 +8,7 @@ import GenreWidget from '@/components/widgets/GenreWidget'
 import PopularityWidget from '@/components/widgets/PopularityWidget'
 import DecadeWidget from '@/components/widgets/DecadeWidget'
 import ArtistWidget from '@/components/widgets/ArtistWidget'
+import TrackWidget from '@/components/widgets/TrackWidget'
 import TrackCard from '@/components/TrackCard'
 
 export default function DashboardPage() {
@@ -108,6 +109,14 @@ export default function DashboardPage() {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleAddTrack = (track) => {
+    const exists = playlist.some((t) => t.id === track.id)
+    if (!exists) {
+      setPlaylist((prev) => [track, ...prev])
+      setNotFound(false)
     }
   }
 
@@ -214,6 +223,12 @@ export default function DashboardPage() {
         {/* Resultados */}
         <div className="w-full">
           <h2 className="text-2xl font-bold mb-6 text-center text-gray-200">Tu Playlist</h2>
+          
+          {/* Añadir canciones directamente */}
+          <div className="mb-6 max-w-2xl mx-auto">
+            <TrackWidget onAdd={handleAddTrack} />
+          </div>
+
           {loading ? (
             <div className="flex items-center justify-center h-60">
               <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-green-500"></div>

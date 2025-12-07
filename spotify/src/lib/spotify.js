@@ -1,10 +1,34 @@
 import { getAccessToken } from '@/lib/auth';
 
 export async function generatePlaylist(preferences) {
-  const { artists, genres, decades, popularity } = preferences;
+  const { artists, tracks, genres, decades, popularity } = preferences;
   const token = getAccessToken();
   if (!token) return [];
   let allTracks = [];
+
+  // 0. Añadir tracks seleccionados explícitamente y sus artistas relacionados
+  if (tracks && tracks.length > 0) {
+    allTracks.push(...tracks);
+    
+    // Opcional: Traer más canciones del artista principal de cada track seleccionado
+    for (const track of tracks) {
+      if (track.artists && track.artists[0]) {
+        try {
+          const artistId = track.artists[0].id;
+          const related = await fetch(
+            `https://api.spotify.com/v1/artists/${artistId}/top-tracks?market=US`,
+            { headers: { 'Authorization': `Bearer ${token}` } }
+          );
+          if (related.ok) {
+            const data = await related.json();
+            if (Array.isArray(data?.tracks)) {
+              allTracks.push(...data.tracks);
+            }
+          }
+        } catch (_) {}
+      }
+    }
+  }
 
   // 1. Obtener top tracks de artistas seleccionados
   for (const artist of artists) {
