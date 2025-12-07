@@ -67,6 +67,30 @@ export default function ArtistWidget({ selectedItems = [], onSelect, limit = 5 }
         placeholder="Buscar artista"
         className="w-full mb-3 px-3 py-2 rounded bg-gray-700 text-white placeholder-gray-400 focus:outline-none"
       />
+      {internalSelected.length > 0 && (
+        <div className="space-y-2 mb-2">
+          {internalSelected.map((artist) => {
+            const image = artist.images?.[0]?.url || ''
+            return (
+              <div key={artist.id} className="w-full flex items-center gap-3 px-3 py-2 rounded bg-gray-700 text-white">
+                <div className="w-8 h-8 relative">
+                  <Image src={image || '/vercel.svg'} alt={artist.name} fill sizes="32px" className="rounded object-cover" />
+                </div>
+                <div className="flex-1 text-left">
+                  <div className="text-sm font-medium">{artist.name}</div>
+                </div>
+                <button
+                  onClick={() => toggle(artist)}
+                  className="px-2 py-1 rounded bg-gray-600 hover:bg-gray-500"
+                >
+                  ×
+                </button>
+              </div>
+            )
+          })}
+          <div className="text-xs text-gray-400">Seleccionados ({internalSelected.length})</div>
+        </div>
+      )}
       {loading ? (
         <div className="flex items-center justify-center h-24">
           <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-500"></div>
@@ -96,4 +120,3 @@ export default function ArtistWidget({ selectedItems = [], onSelect, limit = 5 }
     </div>
   )
 }
-

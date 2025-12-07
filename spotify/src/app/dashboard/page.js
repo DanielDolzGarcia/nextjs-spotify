@@ -17,9 +17,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [notFound, setNotFound] = useState(false)
-  const [showGenres, setShowGenres] = useState(false)
-  const [showPopularity, setShowPopularity] = useState(false)
-  const [showDecades, setShowDecades] = useState(false)
+  const [activeFilter, setActiveFilter] = useState(null)
   const [favorites, setFavorites] = useState(() => {
     if (typeof window === 'undefined') return []
     return JSON.parse(localStorage.getItem('favorite_tracks') || '[]')
@@ -142,25 +140,25 @@ export default function DashboardPage() {
             
             <div className="flex flex-wrap justify-center gap-2">
               <button
-                onClick={() => setShowGenres((v) => !v)}
+                onClick={() => setActiveFilter((f) => (f === 'genres' ? null : 'genres'))}
                 className={`px-4 py-2 rounded-full transition-colors ${
-                  showGenres ? 'bg-green-600 text-white' : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700'
+                  activeFilter === 'genres' ? 'bg-green-600 text-white' : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700'
                 }`}
               >
                 Géneros
               </button>
               <button
-                onClick={() => setShowPopularity((v) => !v)}
+                onClick={() => setActiveFilter((f) => (f === 'popularity' ? null : 'popularity'))}
                 className={`px-4 py-2 rounded-full transition-colors ${
-                  showPopularity ? 'bg-green-600 text-white' : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700'
+                  activeFilter === 'popularity' ? 'bg-green-600 text-white' : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700'
                 }`}
               >
                 Popularidad
               </button>
               <button
-                onClick={() => setShowDecades((v) => !v)}
+                onClick={() => setActiveFilter((f) => (f === 'decades' ? null : 'decades'))}
                 className={`px-4 py-2 rounded-full transition-colors ${
-                  showDecades ? 'bg-green-600 text-white' : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700'
+                  activeFilter === 'decades' ? 'bg-green-600 text-white' : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700'
                 }`}
               >
                 Décadas
@@ -168,17 +166,17 @@ export default function DashboardPage() {
             </div>
 
             <div className="space-y-4 transition-all duration-300 ease-in-out">
-              {showGenres && (
+              {activeFilter === 'genres' && (
                 <div className="animate-in fade-in slide-in-from-top-2 duration-300 bg-gray-800/50 p-4 rounded-lg border border-gray-700">
                   <GenreWidget selectedItems={genres} onSelect={setGenres} />
                 </div>
               )}
-              {showPopularity && (
+              {activeFilter === 'popularity' && (
                 <div className="animate-in fade-in slide-in-from-top-2 duration-300 bg-gray-800/50 p-4 rounded-lg border border-gray-700">
                   <PopularityWidget selectedItems={popularity} onSelect={setPopularity} />
                 </div>
               )}
-              {showDecades && (
+              {activeFilter === 'decades' && (
                 <div className="animate-in fade-in slide-in-from-top-2 duration-300 bg-gray-800/50 p-4 rounded-lg border border-gray-700">
                   <DecadeWidget selectedItems={decades} onSelect={setDecades} />
                 </div>
