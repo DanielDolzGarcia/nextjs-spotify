@@ -27,10 +27,25 @@ export default function PopularityWidget({ selectedItems = [30, 100], onSelect }
     onSelect?.([min, nv])
   }
 
+  const PRESETS = [
+    { label: 'Viral 🔥', min: 80, max: 100 },
+    { label: 'Hits 💿', min: 50, max: 80 },
+    { label: 'Nicho 🕵️', min: 0, max: 40 },
+    { label: 'Todo 🌍', min: 0, max: 100 }
+  ]
+
+  const setPreset = (preset) => {
+    setMin(preset.min)
+    setMax(preset.max)
+    onSelect?.([preset.min, preset.max])
+  }
+
+  const isPresetActive = (p) => p.min === min && p.max === max
+
   const label = () => {
-    if (min >= 80) return 'Mainstream'
-    if (min >= 50) return 'Popular'
-    return 'Underground'
+    if (min >= 80) return 'Viral'
+    if (min >= 50) return 'Hits'
+    return 'Nicho'
   }
 
   return (
@@ -39,7 +54,23 @@ export default function PopularityWidget({ selectedItems = [30, 100], onSelect }
         <h2 className="text-lg font-semibold">Popularidad</h2>
         <span className="text-xs text-gray-400">{min}-{max} · {label()}</span>
       </div>
-      <div className="space-y-3">
+      <div className="flex flex-wrap gap-2 mb-4">
+        {PRESETS.map((preset) => (
+          <button
+            key={preset.label}
+            onClick={() => setPreset(preset)}
+            className={`px-3 py-1 rounded text-sm border transition-colors ${
+              isPresetActive(preset)
+                ? 'bg-green-600 border-green-500 text-white'
+                : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'
+            }`}
+          >
+            {preset.label}
+          </button>
+        ))}
+      </div>
+      <div className="space-y-3 pt-2 border-t border-gray-700">
+        <div className="text-xs text-gray-400 mb-2">Ajuste manual</div>
         <div className="flex items-center gap-3">
           <span className="text-sm text-gray-300 w-20">Mín.</span>
           <input type="range" min={0} max={100} value={min} onChange={(e) => updateMin(e.target.value)} className="flex-1" />
