@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { isAuthenticated, logout, ensureAccessToken } from '@/lib/auth'
 import { generatePlaylist } from '@/lib/spotify'
 import GenreWidget from '@/components/widgets/GenreWidget'
@@ -121,6 +122,14 @@ export default function DashboardPage() {
       setPlaylist((prev) => [track, ...prev])
       setNotFound(false)
     }
+  }
+
+  const onDragEnd = (result) => {
+    if (!result.destination) return
+    const items = Array.from(playlist)
+    const [reorderedItem] = items.splice(result.source.index, 1)
+    items.splice(result.destination.index, 0, reorderedItem)
+    setPlaylist(items)
   }
 
   return (
@@ -261,17 +270,41 @@ export default function DashboardPage() {
               <p className="text-lg">Configura tus filtros arriba y genera tu primera playlist</p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {playlist.map((track) => (
-                <TrackCard
-                  key={track.id}
-                  track={track}
-                  isFavorite={!!favorites.find((f) => f.id === track.id)}
-                  onToggleFavorite={toggleFavorite}
-                  onRemove={removeTrack}
-                />
-              ))}
-            </div>
+            <DragDropContext onDragEnd={onDragEnd}>
+              <Droppable droppableId="playlist">
+                {(provided) => (
+                  <div 
+                    className="space-y-3"
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                  >
+                    {playlist.map((track, index) => (
+                      <Draggable key={track.id} draggableId={track.id} index={index}>
+                        {(provided, snapshot) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            style={{
+                              ...provided.draggableProps.style,
+                              opacity: snapshot.isDragging ? 0.8 : 1,
+                            }}
+                          >
+                            <TrackCard
+                              track={track}
+                              isFavorite={!!favorites.find((f) => f.id === track.id)}
+                              onToggleFavorite={toggleFavorite}
+                              onRemove={removeTrack}
+                            />
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
           )}
         </div>
       </div>
