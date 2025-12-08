@@ -1,7 +1,7 @@
 import { getAccessToken } from '@/lib/auth';
 
 export async function generatePlaylist(preferences) {
-  const { artists, tracks, genres, decades, popularity } = preferences;
+  const { artists, tracks, genres, decades, popularity, mood } = preferences;
   const token = getAccessToken();
   if (!token) return [];
   let allTracks = [];
@@ -84,10 +84,62 @@ export async function generatePlaylist(preferences) {
     );
   }
 
-  // 5. Eliminar duplicados y limitar a 30 canciones
-  const uniqueTracks = Array.from(
+  // 5. Filtrar por Audio Features (Mood)
+  // Nota: Esto requeriría llamar a /v1/audio-features para cada track, lo cual es costoso.
+  // Idealmente se usaría Recommendations API, pero está deprecada.
+  // Como alternativa, haremos un filtrado "best effort" si tenemos pocos tracks,
+  // o simplemente aceptamos que sin Recommendations API el filtrado de mood es limitado.
+  // Para este ejercicio, asumiremos que si hay muchos tracks, filtramos una muestra.
+  
+  let uniqueTracks = Array.from(
     new Map(allTracks.map(track => [track.id, track])).values()
-  ).slice(0, 30);
+  );
 
-  return uniqueTracks;
+  if (mood && Object.keys(mood).length > 0) {
+    // Para no saturar, tomamos los IDs de los candidatos (máx 50 para la llamada)
+    // La API de audio-features acepta hasta 100 IDs
+    const candidates = uniqueTracks.slice(0, 50);
+    const ids = candidates.map(t => t.id).join(',');
+    
+    if (ids) {
+      try {
+        const featuresRes = await fetch(
+          `https://api.spotify.com/v1/audio-features?ids=${ids}`,
+          { headers: { 'Authorization': `Bearer ${token}` } }
+        );
+        
+        if (featuresRes.ok) {
+          const featuresData = await featuresRes.json();
+          const featuresMap = new Map(
+            (featuresData.audio_features || []).filter(Boolean).map(f => [f.id, f])
+          );
+
+          uniqueTracks = uniqueTracks.filter(track => {
+            // Si no está en los candidatos (porque cortamos a 50), lo dejamos pasar o lo quitamos.
+            // Para ser estrictos, solo filtramos los que tenemos features.
+            const f = featuresMap.get(track.id);
+            if (!f) return true; // Si no pudimos obtener features, lo mantenemos por defecto
+
+            // Validar cada criterio del mood
+            return Object.entries(mood).every(([key, value]) => {
+              if (key.startsWith('min_')) {
+                const featureName = key.replace('min_', '');
+                return f[featureName] >= value;
+              }
+              if (key.startsWith('max_')) {
+                const featureName = key.replace('max_', '');
+                return f[featureName] <= value;
+              }
+              return true;
+            });
+          });
+        }
+      } catch (e) {
+        console.error('Error filtering by mood:', e);
+      }
+    }
+  }
+
+  // 6. Limitar a 30 canciones final
+  return uniqueTracks.slice(0, 30);
 }

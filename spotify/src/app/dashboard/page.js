@@ -7,6 +7,7 @@ import { generatePlaylist } from '@/lib/spotify'
 import GenreWidget from '@/components/widgets/GenreWidget'
 import PopularityWidget from '@/components/widgets/PopularityWidget'
 import DecadeWidget from '@/components/widgets/DecadeWidget'
+import MoodWidget from '@/components/widgets/MoodWidget'
 import ArtistWidget from '@/components/widgets/ArtistWidget'
 import TrackWidget from '@/components/widgets/TrackWidget'
 import TrackCard from '@/components/TrackCard'
@@ -24,6 +25,7 @@ export default function DashboardPage() {
     return JSON.parse(localStorage.getItem('favorite_tracks') || '[]')
   })
   const [popularity, setPopularity] = useState([30, 100])
+  const [mood, setMood] = useState({})
   const [decades, setDecades] = useState([])
   const [artists, setArtists] = useState([])
 
@@ -60,7 +62,8 @@ export default function DashboardPage() {
     artists,
     genres,
     decades,
-    popularity
+    popularity,
+    mood
   })
 
   const generate = async () => {
@@ -165,6 +168,14 @@ export default function DashboardPage() {
                 Popularidad
               </button>
               <button
+                onClick={() => setActiveFilter((f) => (f === 'mood' ? null : 'mood'))}
+                className={`px-4 py-2 rounded-full transition-colors ${
+                  activeFilter === 'mood' ? 'bg-green-600 text-white' : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700'
+                }`}
+              >
+                Mood
+              </button>
+              <button
                 onClick={() => setActiveFilter((f) => (f === 'decades' ? null : 'decades'))}
                 className={`px-4 py-2 rounded-full transition-colors ${
                   activeFilter === 'decades' ? 'bg-green-600 text-white' : 'bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-700'
@@ -188,6 +199,11 @@ export default function DashboardPage() {
               {activeFilter === 'decades' && (
                 <div className="animate-in fade-in slide-in-from-top-2 duration-300 bg-gray-800/50 p-4 rounded-lg border border-gray-700">
                   <DecadeWidget selectedItems={decades} onSelect={setDecades} />
+                </div>
+              )}
+              {activeFilter === 'mood' && (
+                <div className="animate-in fade-in slide-in-from-top-2 duration-300 bg-gray-800/50 p-4 rounded-lg border border-gray-700">
+                  <MoodWidget selectedItems={mood} onSelect={setMood} />
                 </div>
               )}
             </div>
