@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
 import { isAuthenticated, logout, ensureAccessToken } from '@/lib/auth'
-import { generatePlaylist } from '@/lib/spotify'
+import { generatePlaylist, savePlaylistToSpotify, getUserProfile } from '@/lib/spotify'
 import GenreWidget from '@/components/widgets/GenreWidget'
 import PopularityWidget from '@/components/widgets/PopularityWidget'
 import DecadeWidget from '@/components/widgets/DecadeWidget'
@@ -18,7 +18,9 @@ export default function DashboardPage() {
   const [genres, setGenres] = useState([])
   const [playlist, setPlaylist] = useState([])
   const [loading, setLoading] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [successMsg, setSuccessMsg] = useState('')
   const [notFound, setNotFound] = useState(false)
   const [activeFilter, setActiveFilter] = useState(null)
   const [favorites, setFavorites] = useState(() => {
@@ -116,6 +118,32 @@ export default function DashboardPage() {
     }
   }
 
+  const handleSaveToSpotify = async () => {
+    if (saving || playlist.length === 0) return
+    setSaving(true)
+    setError('')
+    setSuccessMsg('')
+    try {
+      const user = await getUserProfile()
+      if (!user) {
+        setError('No se pudo obtener el perfil de usuario. Intenta recargar.')
+        return
+      }
+      
+      const saved = await savePlaylistToSpotify(user.id, `Mi Playlist (${new Date().toLocaleDateString()})`, playlist)
+      if (saved) {
+        setSuccessMsg(`¡Playlist guardada exitosamente en Spotify!`)
+        setTimeout(() => setSuccessMsg(''), 5000)
+      } else {
+        setError('Error al guardar la playlist. Inténtalo de nuevo.')
+      }
+    } catch (e) {
+      setError('Ocurrió un error inesperado.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const handleAddTrack = (track) => {
     const exists = playlist.some((t) => t.id === track.id)
     if (!exists) {
@@ -135,7 +163,7 @@ export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-gray-900 text-white">
       <div className="flex items-center justify-between p-4 border-b border-gray-800">
-        <h1 className="text-2xl font-bold">Dashboard</h1>
+        <h1 className="text-2xl font-bold">Creador de Playlists</h1>
         <button
           onClick={handleLogout}
           className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded"
@@ -156,6 +184,11 @@ export default function DashboardPage() {
             {error && (
               <div className="bg-red-600/20 text-red-400 border border-red-600/40 px-3 py-2 rounded text-center">
                 {error}
+              </div>
+            )}
+            {successMsg && (
+              <div className="bg-green-600/20 text-green-400 border border-green-600/40 px-3 py-2 rounded text-center">
+                {successMsg}
               </div>
             )}
             
@@ -245,9 +278,19 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Resultados */}
         <div className="w-full">
-          <h2 className="text-2xl font-bold mb-6 text-center text-gray-200">Tu Playlist</h2>
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-gray-200">Tu Playlist</h2>
+            {playlist.length > 0 && (
+              <button
+                onClick={handleSaveToSpotify}
+                disabled={saving}
+                className="bg-green-600 hover:bg-green-500 disabled:opacity-50 text-white px-4 py-2 rounded-full font-semibold flex items-center gap-2"
+              >
+                {saving ? 'Guardando...' : 'Guardar en Spotify'}
+              </button>
+            )}
+          </div>
           
           {/* Añadir canciones directamente (solo visible si hay playlist) */}
           {playlist.length > 0 && (

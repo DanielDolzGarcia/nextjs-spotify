@@ -1,9 +1,65 @@
 import { getAccessToken } from '@/lib/auth';
 
+export async function savePlaylistToSpotify(userId, name, tracks) {
+  const token = getAccessToken();
+  if (!token) return null;
+
+  try {
+    // 1. Crear playlist vacía
+    const createRes = await fetch(`https://api.spotify.com/v1/users/${userId}/playlists`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: name || 'Mi Playlist Generada',
+        description: 'Creada con Creador de Playlists',
+        public: false
+      })
+    });
+
+    if (!createRes.ok) throw new Error('Error creando playlist');
+    const playlistData = await createRes.json();
+    const playlistId = playlistData.id;
+
+    // 2. Añadir canciones en lotes de 100
+    const uris = tracks.map(t => t.uri);
+    for (let i = 0; i < uris.length; i += 100) {
+      const batch = uris.slice(i, i + 100);
+      await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ uris: batch })
+      });
+    }
+
+    return playlistData;
+  } catch (error) {
+    console.error('Error saving playlist:', error);
+    return null;
+  }
+}
+
+export async function getUserProfile() {
+  const token = getAccessToken();
+  if (!token) return null;
+  try {
+    const res = await fetch('https://api.spotify.com/v1/me', {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (e) {
+    return null;
+  }
+}
 export async function generatePlaylist(preferences) {
   const { artists, tracks, genres, decades, popularity, mood } = preferences;
   const token = getAccessToken();
-  if (!token) return [];
   let allTracks = [];
 
   // 0. Añadir tracks seleccionados explícitamente y sus artistas relacionados
